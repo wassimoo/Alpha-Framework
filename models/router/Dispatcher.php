@@ -1,0 +1,32 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: wassim
+ * Date: 27/02/18
+ * Time: 17:32
+ */
+
+class Dispatcher
+{
+    public static function dispatch(){
+        $parsedUrl = self::parseUrl($_SERVER['REQUEST_URI']);
+
+
+
+        return $parsedUrl;
+    }
+
+    /**
+     * process url and return parsed addresses
+     * @param String $url
+     * @return array of target path
+     */
+    private static function parseUrl(String $url)
+    {
+        $parsedUrl = parse_url($url);
+        $parsedUrl["path"] = ltrim($parsedUrl["path"], "/"); /* start from left */
+        $parsedUrl["path"] = trim($parsedUrl["path"]); // Remove from beginning and end
+        $parsedUrl["path"] = strtolower($parsedUrl["path"]);
+        return  preg_split('@/@',$parsedUrl["path"],NULL,PREG_SPLIT_NO_EMPTY);
+    }
+}

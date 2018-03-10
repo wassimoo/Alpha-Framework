@@ -1,0 +1,4 @@
+WARNING (session.php) 2018-02-26 23:44:33 : Invalid session validity timeout interval was attempted to be set (-1) value has been set to default 10800
+WARNING (session.php) 2018-02-26 23:44:33 : Invalid session regeneration time interval was attempted to be set (-874) value has been set to default 120
+WARNING (session.php) 2018-02-26 23:57:39 : Invalid session validity timeout interval was attempted to be set (-1) value has been set to default 10800
+WARNING (session.php) 2018-02-26 23:57:39 : Invalid session regeneration time interval was attempted to be set (-874) value has been set to default 120
