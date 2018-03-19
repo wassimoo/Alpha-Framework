@@ -25,7 +25,7 @@ echo session_id();
 catch (AlphaFinder\UnreadablePathException $ex){
     echo $ex->getMessage();
 }catch (AlphaFinder\InvalidPathException $ex){
-    echo $ex->getMessage();
+    echo $ex->getMessage(); 
 }
 var_dump($finder->getPaths());
 */
@@ -37,4 +37,3 @@ $router->map("search","search.php",false);
 var_dump($router->actions);
 $router->route();
 //Dispatcher::dispatch();
-

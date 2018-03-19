@@ -90,7 +90,7 @@ class Session
     }
 
     /**
-     * regenrate session id
+     * regenerate session id
      */
     public function regenerateId()
     {

@@ -19,7 +19,7 @@ class Router
     //public $cssDir;
     //public $scriptsDir;
     //public $fontsDir;
-    public $actions;
+    public $actions = array("regex" => array(), "direct" => array());
     public $defaultController;
     private $autoResponseMatch;
 
@@ -69,30 +69,45 @@ class Router
     {
         $url = Dispatcher::dispatch();
         if (empty($url)) {
-            $callback = $this->isValidController($this->defaultController);
-
-            //call Controller:: if found or redirect to 404
-            $callback ? $callback() : header("Location:" .$this->actions["404.html"]);
+            $this->giveControl($this->defaultController);
             return;
         }
         else {
             /**
              * we match request handler here,
              * we can safely use isset even it may return false if value is NULL,
-             * however map() function allows only string and non empty values.
+             * however map() function allows only string with  non empty values.
              */
 
-            if(isset($this->actions[$url[0]])){
-                echo "found";
+            if (isset($this->actions["direct"][$url[0]])) {
+                echo $this->actions["direct"][$url[0]];
             }else{
                 /**
                  * Search for matching pattern;
                  */
-                echo "looking for pattern";
+                foreach ($this->actions["regex"] as $reg => $action) {
+                    if (preg_match($reg, $url[0])) {
+                        echo $action;
+                        return;
+                    }
+                }
+
+                /**
+                 * No pattern match found ! redirect to default Controller
+                 */
+                $this->giveControl($this->defaultController);
             }
 
         }
         return;
+    }
+
+    private function giveControl(String $classFile)
+    {
+        $callback = $this->isValidController($classFile);
+
+        //call Controller:: if found or redirect to 404
+        $callback ? $callback() : header("Location:" . $this->actions["direct"]["404.html"]);
     }
 
     /**
@@ -105,7 +120,11 @@ class Router
     public function map(String $request, String $response, bool $isRegex)
     {
         if(is_string($request) && is_string($response) && $request != "" && $response != "") {
-            $this->actions[($isRegex ? "/" : "") .$request] =  $response;
+            if ($isRegex) {
+                $this->actions["regex"]["/" . $request . "/"] = $response;
+            } else {
+                $this->actions["direct"][$request] = $response;
+            }
             return true;
         }
         return false;
@@ -116,7 +135,7 @@ class Router
      */
     public function setNotFound(String $response)
     {
-        $this->actions["404"] = $response;
+        $this->actions["direct"]["404"] = $response;
 
     }
 
@@ -141,7 +160,7 @@ class Router
      * @param String $classFile
      * @return bool|string
      */
-    public function isValidController(String $classFile)
+    private function isValidController(String $classFile)
     {
         if (empty($classFile)) {
             return false;
