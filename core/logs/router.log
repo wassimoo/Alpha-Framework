@@ -24,3 +24,4 @@ WARNING (Router.php) 2018-03-26 09:36:30 : Invalid controller (/var/www/html/MVC
 WARNING (Router.php) 2018-03-26 10:29:15 : Invalid controller (/var/www/html/MVC/app/controllers/mvc/app/router) file does not exist
 WARNING (Router.php) 2018-03-26 12:55:37 : Invalid controller (/var/www/html/MVC/tests/controllers/MVC/app/Exa.php) file does not exist
 WARNING (Router.php) 2018-03-26 12:55:56 : Invalid controller (/var/www/html/MVC/tests/controllers/MVC/app/example.php) file does not exist
+WARNING (Router.php) 2018-03-26 13:42:22 : Invalid controller (/var/www/html/Alpha-Framework/tests/controllers/MVC/app/example.php) file does not exist
