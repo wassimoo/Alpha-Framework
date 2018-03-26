@@ -29,11 +29,12 @@ catch (AlphaFinder\UnreadablePathException $ex){
 }
 var_dump($finder->getPaths());
 */
-$router = new Router(__DIR__,"/var/www/html/MVC/app/controllers/defaultController.php",false);
-$router->map("(home|index)(\.html|\.php)?","home.php",true);
-$router->map("MVC","login.php",false);
-$router->map("search","search.php",false);
-
+$router = new Router(__DIR__, "", true);
+$router->map(".*", "home.php", true);
+$router->map("mvc", "login.php");
+$router->map("search", "search.php");
+$router->map("mvc/app/router.php", "defaultController.php");
 var_dump($router->actions);
+
 $router->route();
 //Dispatcher::dispatch();
