@@ -44,14 +44,14 @@ class Session
             $this->timeOut = $timeOut;
         } else {
             $this->timeOut = self::defaultTimeOut;
-            error_log("WARNING (session.php) " . date("Y-m-d H:i:s") . " : Invalid session validity timeout interval was attempted to be set ($timeOut) value has been set to default " . self::defaultTimeOut . "\n", 3, __DIR__ . "/../../logs/session.log");
+            error_log("WARNING (session.php) " . date("Y-m-d H:i:s") . " : Invalid session validity timeout interval was attempted to be set ($timeOut) value has been set to default " . self::defaultTimeOut . "\n", 3, __DIR__ . "/../logs/session.log");
         }
 
         if ($regenIdInterval > 0 && $regenIdInterval < 60 * 60 * 5) {
             $this->regenIdInterval = $regenIdInterval;
         } else {
             $this->regenIdInterval = self::defaultRegenIdInterval;
-            error_log("WARNING (session.php) " . date("Y-m-d H:i:s") . " : Invalid session regeneration time interval was attempted to be set ($regenIdInterval) value has been set to default " . self::defaultRegenIdInterval . "\n", 3, __DIR__ . "/../../logs/session.log");
+            error_log("WARNING (session.php) " . date("Y-m-d H:i:s") . " : Invalid session regeneration time interval was attempted to be set ($regenIdInterval) value has been set to default " . self::defaultRegenIdInterval . "\n", 3, __DIR__ . "/../logs/session.log");
         }
 
         $this->data = $data; //TODO : check vulnerability

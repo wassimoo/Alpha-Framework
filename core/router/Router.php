@@ -28,7 +28,7 @@ class Router
 
     /**
      * Router constructor.
-     * @param String $projectRoot main app root folder where MVC exists
+     * @param String $projectRoot main tests root folder where MVC exists
      * @param String $defaultController default controller path , this file is called when no specific page requested
      * @param bool $autoResponseMatch
      */
@@ -74,10 +74,14 @@ class Router
         if (empty($url)) {
             $this->redirect($this->defaultController);
             return;
-        } else if ($this->autoResponseMatch) {
+        }
+
+        if ($this->autoResponseMatch) {
             if ($this->autoRespond($url))
                 return;
-        } else if (array_key_exists($url, $this->actions["direct"])) {
+        }
+
+        if (array_key_exists($url, $this->actions["direct"])) {
 
             /**
              * we match request handler here,
@@ -206,7 +210,7 @@ class Router
             $functionName = basename($classFile, ".php") . "::control";
             return is_callable($functionName) ? $functionName : false;
         } else {
-            error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : Invalid controller ($classFile) file does not exist\n", 3, __DIR__ . "/../../logs/router.log");
+            error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : Invalid controller ($classFile) file does not exist\n", 3, __DIR__ . "/../logs/router.log");
             return false;
         }
     }

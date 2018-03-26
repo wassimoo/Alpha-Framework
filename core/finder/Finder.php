@@ -14,6 +14,7 @@ require_once __DIR__ . "/Exceptions/InvalidPathException.php";
 class Finder
 {
 
+
     private $paths;/* dirs + files + unreadable */
     private $dirs;
     private $files;
@@ -63,7 +64,7 @@ class Finder
 
         // read access is not granted Simply ignore path and notify user through logs
         if (!is_readable($parentDir->fullName)) {
-            error_log("WARNING (Finder.php) " . date("Y-m-d H:i:s") . " : " . new UnreadablePathException() . " returned while trying to access " . $parentDir->fullName . ", file was ignored\n", 3, __DIR__ . "/../../logs/finder.log");
+            error_log("WARNING (Finder.php) " . date("Y-m-d H:i:s") . " : " . new UnreadablePathException() . " returned while trying to access " . $parentDir->fullName . ", file was ignored\n", 3, __DIR__ . "/../logs/finder.log");
             return;
         }
 
@@ -96,6 +97,7 @@ class Finder
 
     /**
      * @param String $expr
+     * @param bool $caseSensitive
      * @return bool|mixed
      */
     public function findDir(String $expr, bool $caseSensitive = true)
