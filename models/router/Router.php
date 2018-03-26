@@ -14,12 +14,13 @@ use AlphaFinder\PathNotFoundException;
 
 class Router
 {
-    public static $finder = null; //finder object
+    private static $finder = null; //finder object
     //public $viewsDir;
     //public $cssDir;
     //public $scriptsDir;
     //public $fontsDir;
     public $actions = array("regex" => array(), "direct" => array());
+    public $projectRoot;
     public $defaultController;
     private $autoResponseMatch;
 
@@ -33,11 +34,14 @@ class Router
      */
     public function __construct(String $projectRoot, String $defaultController = null, bool $autoResponseMatch = true)/*String $viewsDir = null, String $cssDir = null, String $scriptsDir = null, String $fontsDir = null*/
     {
+        $this->projectRoot = $projectRoot;
+
         if ($defaultController === "") //assert $default controller is specified or null
             $defaultController = null;
 
-        if ($defaultController == null || $autoResponseMatch) {/*$viewsDir == null || $cssDir == null || $scriptsDir == null || $fontsDir == null*/
-            // assets directory weren't specified, We look for them manually
+        if ($defaultController == null || $autoResponseMatch) {
+            /* || $viewsDir == null || $cssDir == null || $scriptsDir == null || $fontsDir == null */
+
             require_once __DIR__ . "/../finder/Finder.php";
             try {
                 if (!isset(self::$finder))
@@ -54,7 +58,7 @@ class Router
             //$this->cssDir = $cssDir ?? self::$finder->findDir("(assets?\/)?(css)|(style|stylesheet)s?");
             //$this->scriptsDir = $scriptsDir ?? self::$finder->findDir("(assets?\/)?js|(javascript|script)s?");
             //$this->fontsDir = $fontsDir ?? self::$finder->findDir("(assets?\/)?fonts?");
-            $this->defaultController = self::$finder->findFile("controllers?\/defaultController.php");
+            $this->defaultController = self::$finder->findFile("defaultController.php");
         } else {
             $this->defaultController = $defaultController;
         }
@@ -62,49 +66,82 @@ class Router
         $this->actions = array();
         $this->autoResponseMatch = $autoResponseMatch;
         $this->setNotFound("ErrorPages/404.html");
-
     }
 
     public function route()
     {
         $url = Dispatcher::dispatch();
         if (empty($url)) {
-            $this->giveControl($this->defaultController);
+            $this->redirect($this->defaultController);
             return;
-        }
-        else {
+        } else if ($this->autoResponseMatch) {
+            if ($this->autoRespond($url))
+                return;
+        } else if (array_key_exists($url, $this->actions["direct"])) {
+
             /**
              * we match request handler here,
              * we can safely use isset even it may return false if value is NULL,
              * however map() function allows only string with  non empty values.
              */
 
-            if (isset($this->actions["direct"][$url[0]])) {
-                echo $this->actions["direct"][$url[0]];
-            }else{
-                /**
-                 * Search for matching pattern;
-                 */
-                foreach ($this->actions["regex"] as $reg => $action) {
-                    if (preg_match($reg, $url[0])) {
-                        echo $action;
-                        return;
-                    }
-                }
+            $this->redirect($this->projectRoot . "/controllers/" . $this->actions["direct"][$url]);
+        } else {
 
-                /**
-                 * No pattern match found ! redirect to default Controller
-                 */
-                $this->giveControl($this->defaultController);
+            /**
+             * Search for matching pattern;
+             */
+
+            foreach ($this->actions["regex"] as $reg => $action) {
+                if (preg_match($reg, $url)) {
+                    $this->redirect($this->projectRoot . "/controllers/" . $action);
+                    return;
+                }
             }
 
+            /**
+             * No match found ! redirect to default Controller
+             */
+
+            $this->redirect($this->defaultController);
         }
+        // Controller will be determined based on url path;
+
         return;
     }
 
-    private function giveControl(String $classFile)
+    /**
+     * For instance it's not recommended to put one or more controller files having the same case-sensitive names,
+     * This will cause in an undefined behavior , it's in our TODO list.
+     *
+     * @param String $url
+     * @return bool controller match success/failure
+     */
+
+    private function autoRespond(String $url)
     {
-        $callback = $this->isValidController($classFile);
+        if (self::$finder == null) {
+            return false;
+        } else {
+            $targetControllerPath = $this->projectRoot . "/controllers/" . rtrim($url, ".php") . ".php";
+            $targetControllerPath = self::$finder->findFile($targetControllerPath, false);
+
+            if ($targetControllerPath == false) //not found
+                return false;
+
+            else if (($callback = $this->isValidController($targetControllerPath)) != false) {
+                $this->redirect($targetControllerPath, $callback);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    private function redirect(String $classFile, String $callback = "")
+    {
+        if ($callback === "") {
+            $callback = $this->isValidController($classFile);
+        }
 
         //call Controller:: if found or redirect to 404
         $callback ? $callback() : header("Location:" . $this->actions["direct"]["404.html"]);
@@ -117,9 +154,9 @@ class Router
      * @param bool $isRegex
      * @return bool set|update success
      */
-    public function map(String $request, String $response, bool $isRegex)
+    public function map(String $request, String $response, bool $isRegex = false)
     {
-        if(is_string($request) && is_string($response) && $request != "" && $response != "") {
+        if (is_string($request) && is_string($response) && $request != "" && $response != "") {
             if ($isRegex) {
                 $this->actions["regex"]["/" . $request . "/"] = $response;
             } else {
@@ -155,7 +192,7 @@ class Router
      * if file does not exist or control() method  not found
      *      returns false
      * else
-     *      returns static method name
+     *      returns static method control() callable string
      *
      * @param String $classFile
      * @return bool|string
