@@ -98,35 +98,38 @@ class Finder
      * @param String $expr
      * @return bool|mixed
      */
-    public function findDir(String $expr)
+    public function findDir(String $expr, bool $caseSensitive = true)
     {
         if (empty($this->paths)) {
             return false;
         }
+        $expr = "/.*" . preg_quote($expr, '/') . "(\/)?\z/D" . ($caseSensitive ? "" : "i");
 
         foreach ($this->paths as $path) {
-            if (preg_match("/.*" . $expr . "(\/)?\z/iD", $path) == 1)
+            if (preg_match($expr, $path) == 1)
                 return $path;
         }
         return false;
     }
 
     /**
-     * @param String $expr
+     * @param String $expr regex expression
+     * @param bool $caseSensitive
      * @return bool|mixed
      */
-    public function findFile(String $expr)
+    public function findFile(String $expr, bool $caseSensitive = true)
     {
         if (empty($this->files)) {
             return false;
         }
-
+        $expr = "/" . preg_quote($expr, '/') . "\z/D" . ($caseSensitive ? "" : "i");
         foreach ($this->files as $file) {
-            if (preg_match("/.*" . $expr . "\z/iD", $file))
+            if (preg_match($expr, $file) == 1)
                 return $file;
         }
         return false;
     }
+
     //public function whereIs($file)
 
     /**
