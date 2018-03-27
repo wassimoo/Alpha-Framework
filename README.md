@@ -117,16 +117,16 @@ We will introduce all these features in the next section.
         :exclamation: Routing Order
         1. Automatic routing (if is enabled).
         
-             else
-         
+          else
+          
         2. direct routing (explicit request).
         
-             else
-         
+          else
+          
         3. regex routing (regex request expression).
         
-             else
-         
+          else
+          
         4. 404.html (if unable to match request using any of the above methods)
         
         If auto-router is unable to find the associated file it will continue search using the next methods.
