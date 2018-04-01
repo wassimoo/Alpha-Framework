@@ -15,21 +15,28 @@
 namespace AlphaDB;
 require_once "Exceptions/DBCException.php";
 
-abstract class ADC
+class ADC
 {
-    protected $dbName;
+    
+    public $dbName;
+    private $host;
+    private $port;
+    private $charset;
+    private $defaultSchema;
 
-    protected $host;
-    protected $port;
-    protected $charset;
-    protected $defaultSchema;
+    private $username;
+    private $password;
+    private $sysdba;
 
-    protected $username;
-    protected $password;
+    private $connection;
 
-    public abstract function connect($username, $password);
-
-    public abstract function disconnect();
+    public function __construct($dbName, $host, $port, $charset, $schema){
+        $this->dbName = $dbName;
+        $this->host = $host;
+        $this->port = $port;
+        $this->charset = $charset;
+        $this->defaultSchema = $schema;
+    }
 
     /**
      * If host is not specified localhost is set by default.
@@ -39,7 +46,7 @@ abstract class ADC
      * @return resource
      * @throws DBCException
      */
-    protected function _oracleConnect($username, $password, $sysdba)
+    public function _oracleConnect($username, $password, $sysdba)
     {
         if (empty($this->port))
             $this->port = 1521;
@@ -56,6 +63,7 @@ abstract class ADC
 
         if (empty($username))
             throw new DBCException("No username has been specified");
+        
         if($sysdba)
             $conn = oci_connect($username, $password, $connStr, $this->charset, OCI_SYSDBA);
         else
@@ -81,8 +89,11 @@ abstract class ADC
                 }
             }
         }
+        $this->username = $username;
+        $this->password = $password;
+        $this->sysdba = $sysdba;
 
-        return $conn;
+        $this->connection =  $conn;
     }
 
     /**
@@ -91,7 +102,7 @@ abstract class ADC
      * @return \mysqli
      * @throws DBCException
      */
-    protected function _mysqlConnect($username, $password)
+    public function _mysqlConnect($username, $password)
     {
         if (empty($this->port))
             $this->port = 3306;
@@ -102,8 +113,11 @@ abstract class ADC
             throw new DBCException("No username has been specified");
         
         $conn = new \mysqli($this->host, $username, $password, $this->defaultSchema);
-        if($conn->connect_errno == 0)
-            return $conn;
+        if($conn->connect_errno == 0){
+            $this->username = $username;
+            $this->password = $password;
+            $this->connection  =  $conn;
+        }
         else if($conn->connect_errno == 1045)
             throw new DBCException("can't connect to database error message Access denied for user");
         else if ($conn->connect_errno == 1049)
@@ -111,5 +125,9 @@ abstract class ADC
         else 
             throw new Exception($conn->connect_error);
             
+    }
+
+    public function _pstgrsConnect($username, $password){
+        
     }
 }

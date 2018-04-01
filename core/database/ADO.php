@@ -11,17 +11,13 @@ use AlphaDB\DBCException;
 
 require_once "ADC.php";
 
-class ADO extends ADC
+class ADO
 {
+    public $connector;
 
     public function __construct($dbName, $host, $port, $charset, $schema)
     {
-        $this->dbName = $dbName;
-        $this->host = $host;
-        $this->port = $port;
-        $this->charset = $charset;
-        $this->defaultSchema = $schema;
-
+        $this->connector = new ADC($dbName,$host,$port,$charset,$schema);
     }
 
     /**
@@ -33,19 +29,17 @@ class ADO extends ADC
      */
     public  function connect($username, $password, $sysdba = false)
     {
-            $callable =  array($this,$this->dbName . "Connect");
+            $callable =  array($this->connector,$this->connector->dbName . "Connect");
             if(!is_callable($callable))
                 throw new DBCException("unsupported database $this->dbName");
 
-            return $callable($username, $password, $sysdba);
+            $callable($username, $password, $sysdba);
     }
 
     public  function disconnect()
     {
 
     }
-
-
 
 }
 
