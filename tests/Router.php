@@ -1,11 +1,15 @@
 <?php
+
 require_once __DIR__ . "/../core/session/session.php";
 require_once __DIR__ . "/../core/router/Router.php";
+require_once __DIR__ . "/../core/database/ADO.php";
 
-/*Session::startSession();
+/*
+Session::startSession();
 if (!isset($_SESSION["info"])) {
-    $_SESSION["info"] = new Session(100 , 3 , array("username" => "wassimoo"));
+    $_SESSION["info"] = new Session(100 , 5 , array("username" => "wassimoo"));
 }
+
 
 if(!$_SESSION["info"]->validate()){
     echo "login again";
@@ -14,6 +18,8 @@ if(!$_SESSION["info"]->validate()){
 //$_SESSION["info"]->endSession();
 var_dump($_SESSION["info"]);
 echo session_id();
+
+exit();
 */
 
 /*
@@ -29,6 +35,7 @@ catch (AlphaFinder\UnreadablePathException $ex){
 }
 var_dump($finder->getPaths());
 */
+/*
 $router = new Router(__DIR__, "", true);
 $router->map(".*", "MVC/app/example.php", true);
 $router->map("mvc", "login.php");
@@ -37,4 +44,13 @@ $router->map("mvc/tests/routers", "defaultController.php");
 var_dump($router->actions);
 
 $router->route();
-//Dispatcher::dispatch();
+*/
+
+//Connection::xa();
+
+$x = new ADO(DB::MYSQL,'localhost','','',"college");
+try{
+    var_dump($x->connect("root","Wael5121997"));
+}catch (\AlphaDB\DBCException $e){
+    echo $e->getMessage();
+}

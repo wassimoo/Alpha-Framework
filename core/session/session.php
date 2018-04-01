@@ -1,5 +1,7 @@
 <?php
-namespace Session;
+
+namespace AlphaSession;
+
 class Session
 {
     /* Default session parameters */
@@ -23,7 +25,7 @@ class Session
     public function __construct($timeOut = self::defaultTimeOut, $regenIdInterval = self::defaultRegenIdInterval, $data = null)
     {
         self::startSession();
-        $this->overrideSettings($timeOut, $regenIdInterval, $data);
+        $this->overwriteSettings($timeOut, $regenIdInterval, $data);
         $this->initProperties();
     }
 
@@ -38,7 +40,12 @@ class Session
         }
     }
 
-    private function overrideSettings($timeOut, $regenIdInterval, $data)
+    /**
+     * @param int $timeOut session maximum lifetime in seconds
+     * @param int $regenIdInterval maximum single session id lifetime in seconds , if expires session_regenerate_id will be called
+     * @param array $data array of session lifetime data (to be (un)set on every new session )
+     */
+    public function overwriteSettings($timeOut, $regenIdInterval, $data)
     {
         if ($timeOut > 0) {
             $this->timeOut = $timeOut;

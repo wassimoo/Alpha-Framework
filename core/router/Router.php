@@ -5,12 +5,15 @@
  * Date: 27/02/18
  * Time: 17:31
  */
+namespace AlphaRouter;
+
 require_once __DIR__ . "/../finder/Finder.php";
 require_once __DIR__ . "/../router/Dispatcher.php";
 
 use AlphaFinder\Finder;
 use AlphaFinder\InvalidPathException;
 use AlphaFinder\PathNotFoundException;
+
 
 class Router
 {

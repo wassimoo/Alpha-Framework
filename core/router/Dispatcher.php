@@ -6,6 +6,8 @@
  * Time: 17:32
  */
 
+namespace AlphaRouter;
+
 class Dispatcher
 {
     /**
