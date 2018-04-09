@@ -13,7 +13,7 @@ require_once "ADC.php";
 
 class ADO
 {
-    public $connector;
+    private $connector;
 
     public function __construct($dbName, $host, $port, $charset, $schema)
     {
@@ -40,7 +40,7 @@ class ADO
     {
 
     }
-
+    
 }
 
 
