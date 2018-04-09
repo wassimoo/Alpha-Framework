@@ -1,8 +1,13 @@
 <?php
 
+use AlphaDB\QueryBuilder;
+use AlphaDB\QBException;
+
 require_once __DIR__ . "/../core/session/session.php";
 require_once __DIR__ . "/../core/router/Router.php";
 require_once __DIR__ . "/../core/database/ADO.php";
+require_once  __DIR__ . "/../core/database/QueryBuilder/QueryBuilder.php";
+require_once  __DIR__ . "/../core/database/Exceptions/QBException.php";
 
 /*
 Session::startSession();
@@ -48,9 +53,23 @@ $router->route();
 
 //Connection::xa();
 
-$x = new ADO(DB::MYSQL,'localhost','','',"college");
+/*
+$x = new ADO(DB::ORACLE,'','','','');
 try{
-    var_dump($x->connect("root","Wael5121997"));
+    $x->connect("SYS","Wael5121997",true);
 }catch (\AlphaDB\DBCException $e){
     echo $e->getMessage();
+}*/
+
+$ado = new ADO(DB::ORACLE,'','','','');
+$qb = new QueryBuilder();
+try{
+    $qb->select('first_name, last_name ,commission_pct')->from('Employees')
+        ->where("first_name","last_name")->equals("'john'")
+        ->or_("salary")
+        ->not()->greaterThan("4");
+    echo $qb->getQuery();
+}catch (QBException $e){
+    echo $e->getMessage();
 }
+
