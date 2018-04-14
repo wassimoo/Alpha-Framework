@@ -14,7 +14,6 @@ use AlphaFinder\Finder;
 use AlphaFinder\InvalidPathException;
 use AlphaFinder\PathNotFoundException;
 
-
 class Router
 {
     private static $finder = null; //finder object
@@ -26,6 +25,10 @@ class Router
     public $projectRoot;
     public $defaultController;
     private $autoResponseMatch;
+    /**
+     * @var String prefix for url , will be ignored when routing .
+     */
+    private $uriPrefix;
 
     /* TODO : should the project root be passed or controllers folder only ? */
 
@@ -35,20 +38,24 @@ class Router
      * @param String $defaultController default controller path , this file is called when no specific page requested
      * @param bool $autoResponseMatch
      */
-    public function __construct(String $projectRoot, String $defaultController = null, bool $autoResponseMatch = true)/*String $viewsDir = null, String $cssDir = null, String $scriptsDir = null, String $fontsDir = null*/
+    public function __construct(String $projectRoot, String $defaultController = null, bool $autoResponseMatch = true) /*String $viewsDir = null, String $cssDir = null, String $scriptsDir = null, String $fontsDir = null*/
     {
         $this->projectRoot = $projectRoot;
 
         if ($defaultController === "") //assert $default controller is specified or null
+        {
             $defaultController = null;
+        }
 
         if ($defaultController == null || $autoResponseMatch) {
             /* || $viewsDir == null || $cssDir == null || $scriptsDir == null || $fontsDir == null */
 
             require_once __DIR__ . "/../finder/Finder.php";
             try {
-                if (!isset(self::$finder))
-                    self::$finder = new Finder($projectRoot, array("vendor", "models"), 5); //TODO : exclude self(whether in vendor or in models) and cached folders
+                if (!isset(self::$finder)) {
+                    self::$finder = new Finder($projectRoot, array("vendor", "models"), 5);
+                }
+                //TODO : exclude self(whether in vendor or in models) and cached folders
             } catch (PathNotFoundException $e) {
                 echo $e;
                 return;
@@ -69,19 +76,23 @@ class Router
         $this->actions = array();
         $this->autoResponseMatch = $autoResponseMatch;
         $this->setNotFound("ErrorPages/404.html");
+        $this->uriPrefix = "";
     }
 
     public function route()
     {
-        $url = Dispatcher::dispatch();
+        $url = Dispatcher::dispatch($this->uriPrefix);
+
         if (empty($url)) {
             $this->redirect($this->defaultController);
             return;
         }
 
         if ($this->autoResponseMatch) {
-            if ($this->autoRespond($url))
+            if ($this->autoRespond($url)) {
                 return;
+            }
+
         }
 
         if (array_key_exists($url, $this->actions["direct"])) {
@@ -134,9 +145,9 @@ class Router
             $targetControllerPath = self::$finder->findFile($targetControllerPath, false);
 
             if ($targetControllerPath == false) //not found
+            {
                 return false;
-
-            else if (($callback = $this->isValidController($targetControllerPath)) != false) {
+            } else if (($callback = $this->isValidController($targetControllerPath)) != false) {
                 $this->redirect($targetControllerPath, $callback);
                 return true;
             }
@@ -193,6 +204,22 @@ class Router
             $this->autoResponseMatch = !$this->autoResponseMatch;
         }
 
+    }
+
+    /**
+     * Set uri_prefix , to clear use clearPrefix()
+     * @param String $prefix lowercase and non empty string
+     */
+    public function setPrefix(string $prefix)
+    {
+        if(!empty($prefix)){
+            $this->uriPrefix = $prefix;
+        }
+    }
+
+    function clearPrefix()
+    {
+        $this->uriPrefix = "";
     }
 
     /**
