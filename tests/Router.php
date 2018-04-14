@@ -2,6 +2,7 @@
 
 use AlphaDB\QueryBuilder;
 use AlphaDB\QBException;
+//use AlphaRouter\Router;
 
 require_once __DIR__ . "/../core/session/session.php";
 require_once __DIR__ . "/../core/router/Router.php";
@@ -10,7 +11,7 @@ require_once  __DIR__ . "/../core/database/QueryBuilder/QueryBuilder.php";
 require_once  __DIR__ . "/../core/database/Exceptions/QBException.php";
 
 /*
-Session::startSession();
+Session::startSesAlphaRoutersion();
 if (!isset($_SESSION["info"])) {
     $_SESSION["info"] = new Session(100 , 5 , array("username" => "wassimoo"));
 }
@@ -42,6 +43,7 @@ var_dump($finder->getPaths());
 */
 /*
 $router = new Router(__DIR__, "", true);
+$router->setPrefix("Alpha-Framework/tests");
 $router->map(".*", "MVC/app/example.php", true);
 $router->map("mvc", "login.php");
 $router->map("search", "search.php");
@@ -61,13 +63,14 @@ try{
     echo $e->getMessage();
 }*/
 
+
 $ado = new ADO(DB::ORACLE,'','','','');
 $qb = new QueryBuilder();
 try{
     $qb->select('first_name, last_name ,commission_pct')->from('Employees')
         ->where("first_name","last_name")->equals("'john'")
         ->or_("salary")
-        ->not()->greaterThan("4");
+        ->not()->between("4","5");
     echo $qb->getQuery();
 }catch (QBException $e){
     echo $e->getMessage();
