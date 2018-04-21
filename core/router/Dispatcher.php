@@ -30,10 +30,44 @@ class Dispatcher
     private static function parseUrl(String $url, String $prefix)
     {
         $parsedUrl = trim($url); // Remove from beginning and end
-        $parsedUrl = ltrim($parsedUrl, "/$prefix"); /* start from left */
-        $parsedUrl = rtrim($parsedUrl, "/");
+        $parsedUrl = self::lmask($parsedUrl, "/$prefix"); /* start from left */
+        $parsedUrl = self::rmask($parsedUrl);
         $parsedUrl = strtolower($parsedUrl);
         return explode("/", $parsedUrl);
+    }
+
+    /**
+     * Mask string from begining of  $str
+     * @param string $str string to be masked
+     * @param string $suffix mask
+     * @return string masked string
+     */
+    private static function lmask(String $str, $prefix = "")
+    {
+        if ($prefix !== "") {
+
+            if (substr($str, 0, strlen($prefix)) == $prefix) {
+                $str = substr($str, strlen($prefix));
+            }
+        }
+        return ltrim($str, "/");
+    }
+
+    /**
+     * Mask string at the end of  $str
+     * @param string $str string to be masked
+     * @param string $suffix mask
+     * @return string masked string
+     */
+    private static function rmask(String $str, $suffix = "")
+    {
+        if ($suffix !== "") {
+            if (substr($str, strlen($str) - strlen($suffix)) == $suffix) {
+                $str = substr($str, strlen($suffix));
+            }
+        }
+
+        return rtrim($str, "/");
     }
 
     /**
