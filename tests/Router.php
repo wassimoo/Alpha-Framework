@@ -2,7 +2,7 @@
 
 use AlphaDB\QueryBuilder;
 use AlphaDB\QBException;
-//use AlphaRouter\Router;
+use AlphaRouter\Router;
 
 require_once __DIR__ . "/../core/session/session.php";
 require_once __DIR__ . "/../core/router/Router.php";
@@ -41,17 +41,18 @@ catch (AlphaFinder\UnreadablePathException $ex){
 }
 var_dump($finder->getPaths());
 */
-/*
-$router = new Router(__DIR__, "", true);
+
+
+$router = new Router(__DIR__, "", false);
 $router->setPrefix("Alpha-Framework/tests");
-$router->map(".*", "MVC/app/example.php", true);
+
+$router->map(".*", "MVC/app/Example.php", true);
 $router->map("mvc", "login.php");
 $router->map("search", "search.php");
 $router->map("mvc/tests/routers", "defaultController.php");
-var_dump($router->actions);
 
 $router->route();
-*/
+exit();
 
 //Connection::xa();
 
