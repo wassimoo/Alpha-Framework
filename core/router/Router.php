@@ -75,11 +75,9 @@ class Router
             //$this->cssDir = $cssDir ?? self::$finder->findDir("(assets?\/)?(css)|(style|stylesheet)s?");
             //$this->scriptsDir = $scriptsDir ?? self::$finder->findDir("(assets?\/)?js|(javascript|script)s?");
             //$this->fontsDir = $fontsDir ?? self::$finder->findDir("(assets?\/)?fonts?");
-            $this->defaultController = $defaultController;
-        } else {
-            $this->defaultController = $defaultController;
-        }
-
+        } 
+        
+        $this->defaultController = $defaultController;
         $this->actions = array();
         $this->autoResponseMatch = $autoResponseMatch;
         $this->setNotFound("$projectRoot/controllers/ErrorPages/404.php");
