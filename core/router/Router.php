@@ -14,14 +14,13 @@ use AlphaFinder\Finder;
 use AlphaFinder\InvalidPathException;
 use AlphaFinder\PathNotFoundException;
 
+define("DEFAULT_PATTERN", "{controller}/{method}/{id}");
+
 class Router
 {
     private static $finder = null; //finder object
-    //public $viewsDir;
-    //public $cssDir;
-    //public $scriptsDir;
-    //public $fontsDir;
-    public $actions = array("regex" => array(), "direct" => array());
+
+    private $actions = array("regex" => array(), "direct" => array());
     public $projectRoot;
     public $defaultController;
     private $autoResponseMatch;
@@ -30,7 +29,15 @@ class Router
      */
     private $uriPrefix;
 
-    /* TODO : should the project root be passed or controllers folder only ? */
+    /**
+     * @var string $pattern, controller calling rules
+     * example : {controller}/{method}/{id}
+     * {controller} => name of controller
+     * {method} => name of methode to be called
+     * {id} => methode param id will be matched
+     * rest => rest of url dispatched parameters that could not be matched with pattern
+     */
+    public $pattern;
 
     /**
      * Router constructor.
@@ -38,7 +45,7 @@ class Router
      * @param String $defaultController default controller path , this file is called when no specific page requested
      * @param bool $autoResponseMatch
      */
-    public function __construct(String $projectRoot, String $defaultController = null, bool $autoResponseMatch = true) /*String $viewsDir = null, String $cssDir = null, String $scriptsDir = null, String $fontsDir = null*/
+    public function __construct(String $projectRoot, String $defaultController = null, bool $autoResponseMatch = true, string $pattern = "") /*String $viewsDir = null, String $cssDir = null, String $scriptsDir = null, String $fontsDir = null*/
     {
         $this->projectRoot = $projectRoot;
 
@@ -76,26 +83,34 @@ class Router
         $this->actions = array();
         $this->autoResponseMatch = $autoResponseMatch;
         $this->setNotFound("ErrorPages/404.html");
-        $this->uriPrefix = "";
+
+        if ($pattern == "") {
+            $this->pattern = DEFAULT_PATTERN;
+        } else {
+            $this->pattern = $pattern;
+        }
     }
 
     public function route()
     {
-        $url = Dispatcher::dispatch($this->uriPrefix);
+        $urlMap = Dispatcher::dispatch($this->uriPrefix, $this->pattern);
 
-        if (empty($url)) {
+        if (empty($urlMap["controller"])) {
             $this->redirect($this->defaultController);
             return;
         }
 
-        if ($this->autoResponseMatch) {
-            if ($this->autoRespond($url)) {
-                return;
-            }
-
+        if (empty($urlMap["method"])) {
+            $url["method"] = "control";
         }
 
-        if (array_key_exists($url, $this->actions["direct"])) {
+        if ($this->autoResponseMatch) {
+            if ($this->autoRespond($urlMap)) {
+                return;
+            }
+        }
+
+        if (array_key_exists($urlMap["controller"], $this->actions["direct"])) {
 
             /**
              * we match request handler here,
@@ -103,7 +118,7 @@ class Router
              * however map() function allows only string with  non empty values.
              */
 
-            $this->redirect($this->projectRoot . "/controllers/" . $this->actions["direct"][$url]);
+            $this->redirect($this->projectRoot . "/controllers/" . $this->actions["direct"][$urlMap["controller"]]);
         } else {
 
             /**
@@ -111,7 +126,7 @@ class Router
              */
 
             foreach ($this->actions["regex"] as $reg => $action) {
-                if (preg_match($reg, $url)) {
+                if (preg_match($reg, $urlMap["controller"])) {
                     $this->redirect($this->projectRoot . "/controllers/" . $action);
                     return;
                 }
@@ -132,37 +147,68 @@ class Router
      * For instance it's not recommended to put one or more controller files having the same case-sensitive names,
      * This will cause in an undefined behavior , it's in our TODO list.
      *
-     * @param String $url
-     * @return bool controller match success/failure
+     * @param array $urlMap
      */
 
-    private function autoRespond(String $url)
+    private function autoRespond(array $urlMap)
     {
         if (self::$finder == null) {
-            return false;
+            $this->redirect($this->defaultController);
         } else {
-            $targetControllerPath = $this->projectRoot . "/controllers/" . rtrim($url, ".php") . ".php";
+
+            $targetControllerPath = $this->projectRoot . "/controllers/" . rtrim($urlMap["controller"], ".php") . ".php";
             $targetControllerPath = self::$finder->findFile($targetControllerPath, false);
 
             if ($targetControllerPath == false) //not found
             {
-                return false;
-            } else if (($callback = $this->isValidController($targetControllerPath)) != false) {
-                $this->redirect($targetControllerPath, $callback);
-                return true;
+                header("Location:" . $this->actions["direct"]["404"]);
+                exit();
+            } else {
+                $args = array_diff($urlMap, [$urlMap["method"], $urlMap["controller"]]);
+                $this->redirect($targetControllerPath, $urlMap["method"], $args);
             }
-            return false;
         }
     }
 
-    private function redirect(String $classFile, String $callback = "")
+    /**
+     * Call requested method with args that can be matched by $params
+     * @var string $classFile path to file
+     * @var string $method method name to be called
+     * @var array $params args
+     */
+    private function redirect(String $classFile, string $method = "control", array $params = [])
     {
-        if ($callback === "") {
-            $callback = $this->isValidController($classFile);
-        }
+        try {
+            require_once $classFile;
+            $class = basename($classFile, ".php");
+            $reflection = new \ReflectionMethod(basename($class, ".php"), $method);
+            $namespace = $reflection->getNamespaceName();
+            $num_params = $reflection->getNumberOfRequiredParameters();
+            if ($num_params > count($params)) { //TODO : add required parameters check !
+                return false;
+            } else {
+                $fire_args = array();
 
-        //call Controller:: if found or redirect to 404
-        $callback ? $callback() : header("Location:" . $this->actions["direct"]["404.html"]);
+                foreach ($reflection->getParameters() as $arg) {
+                    if (array_key_exists($arg->name, $params)) {
+                        $fire_args[$arg->name] = $params[$arg->name];
+                    } else {
+                        $fire_args[$arg->name] = null;
+                    }
+                }
+                call_user_func_array(array($class, $method), $fire_args);
+            }
+        } catch (ReflectionException $ex) {
+            $msg = "Invalid controller ($classFile::$method) can't call method or file does not exist\n";
+            error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : $msg ", 3, __DIR__ . "/../logs/router.log");
+            if (isset($this->actions["direct"]["404"]) && file_exists($this->actions["direct"]["404"])) {
+                header("Location:" . $this->actions["direct"]["404"]);
+                exit();
+            } else {
+                $msg = "Can't find 404 page file\n";
+                error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : $msg", 3, __DIR__ . "/../logs/router.log");
+            }
+        }
     }
 
     /**
@@ -212,36 +258,13 @@ class Router
      */
     public function setPrefix(string $prefix)
     {
-        if(!empty($prefix)){
+        if (!empty($prefix)) {
             $this->uriPrefix = $prefix;
         }
     }
 
-    function clearPrefix()
+    public function clearPrefix()
     {
         $this->uriPrefix = "";
-    }
-
-    /**
-     * if file does not exist or control() method  not found
-     *      returns false
-     * else
-     *      returns static method control() callable string
-     *
-     * @param String $classFile
-     * @return bool|string
-     */
-    private function isValidController(String $classFile)
-    {
-        if (empty($classFile)) {
-            return false;
-        } else if (file_exists($classFile)) {
-            require_once $classFile;
-            $functionName = basename($classFile, ".php") . "::control";
-            return is_callable($functionName) ? $functionName : false;
-        } else {
-            error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : Invalid controller ($classFile) file does not exist\n", 3, __DIR__ . "/../logs/router.log");
-            return false;
-        }
     }
 }
