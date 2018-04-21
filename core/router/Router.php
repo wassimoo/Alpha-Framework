@@ -75,14 +75,14 @@ class Router
             //$this->cssDir = $cssDir ?? self::$finder->findDir("(assets?\/)?(css)|(style|stylesheet)s?");
             //$this->scriptsDir = $scriptsDir ?? self::$finder->findDir("(assets?\/)?js|(javascript|script)s?");
             //$this->fontsDir = $fontsDir ?? self::$finder->findDir("(assets?\/)?fonts?");
-            $this->defaultController = self::$finder->findFile("defaultController.php");
+            $this->defaultController = $defaultController;
         } else {
             $this->defaultController = $defaultController;
         }
 
         $this->actions = array();
         $this->autoResponseMatch = $autoResponseMatch;
-        $this->setNotFound("ErrorPages/404.html");
+        $this->setNotFound("$projectRoot/controllers/ErrorPages/404.php");
 
         if ($pattern == "") {
             $this->pattern = DEFAULT_PATTERN;
@@ -101,7 +101,7 @@ class Router
         }
 
         if (empty($urlMap["method"])) {
-            $url["method"] = "control";
+            $urlMap["method"] = "control";
         }
 
         if ($this->autoResponseMatch) {
@@ -155,13 +155,17 @@ class Router
         if (self::$finder == null) {
             $this->redirect($this->defaultController);
         } else {
+            $targetControllerPath = $this->projectRoot . "/controllers/" . $urlMap["controller"];
 
-            $targetControllerPath = $this->projectRoot . "/controllers/" . rtrim($urlMap["controller"], ".php") . ".php";
+            if (substr($urlMap["controller"], strlen($urlMap["controller"]) - 4) != ".php") {
+                $targetControllerPath .= ".php";
+            }
+
             $targetControllerPath = self::$finder->findFile($targetControllerPath, false);
 
             if ($targetControllerPath == false) //not found
             {
-                header("Location:" . $this->actions["direct"]["404"]);
+                require $this->actions["direct"]["404"];
                 exit();
             } else {
                 $args = array_diff($urlMap, [$urlMap["method"], $urlMap["controller"]]);
@@ -181,7 +185,7 @@ class Router
         try {
             require_once $classFile;
             $class = basename($classFile, ".php");
-            $reflection = new \ReflectionMethod(basename($class, ".php"), $method);
+            $reflection = new \ReflectionMethod($class, $method);
             $namespace = $reflection->getNamespaceName();
             $num_params = $reflection->getNumberOfRequiredParameters();
             if ($num_params > count($params)) { //TODO : add required parameters check !
@@ -197,12 +201,13 @@ class Router
                     }
                 }
                 call_user_func_array(array($class, $method), $fire_args);
+                exit();
             }
-        } catch (ReflectionException $ex) {
+        } catch (\ReflectionException $ex) {
             $msg = "Invalid controller ($classFile::$method) can't call method or file does not exist\n";
             error_log("WARNING (Router.php) " . date("Y-m-d H:i:s") . " : $msg ", 3, __DIR__ . "/../logs/router.log");
             if (isset($this->actions["direct"]["404"]) && file_exists($this->actions["direct"]["404"])) {
-                header("Location:" . $this->actions["direct"]["404"]);
+                require $this->actions["direct"]["404"];
                 exit();
             } else {
                 $msg = "Can't find 404 page file\n";
